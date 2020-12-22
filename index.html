@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Hello!</h1>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wangEditor</title>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/wangeditor/dist/wangEditor.min.js"
+    ></script>
+  </head>
+  <body>
+    <div id="wangEditor"></div>
+    <script type="text/javascript">
+      const E = window.wangEditor;
+      const editor = new E("#wangEditor");
+      editor.create();
+    </script>
+  </body>
 </html>
