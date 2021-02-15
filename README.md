@@ -1,1 +1,1 @@
-https://shenduldh.github.io/website/
+https://shenduldh.github.io/tool/
