@@ -1,1 +1,1 @@
-https://shenduldh.github.io/tool/
+https://shenduldh.github.io/util/
