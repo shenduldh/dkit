@@ -2,6 +2,7 @@
 <html lang="zh-cn">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Content Aware Image Resizing</title>
 		<style>
 			#resizeCanvas {
@@ -12,19 +13,10 @@
 				display: block;
 				margin-bottom: 10px;
 			}
-			#rawDataCanvas {
-				position: absolute;
-				left: 0;
-				top: 0;
-			}
 			#maskCanvas {
 				position: absolute;
 				left: 0;
 				top: 0;
-			}
-			#rawDataImg {
-				height: 0px;
-				visibility: hidden;
 			}
 			.resizeForm {
 				margin-bottom: 10px;
@@ -34,11 +26,10 @@
 				box-shadow: 0 0 3px 1px #eee;
 				padding: 5px;
 			}
-			#resizeWidthInput {
-				width: 30px;
-			}
-			#resizeHeightInput {
-				width: 30px;
+			#wPercentInput,
+			#hPercentInput,
+			#imageRatioInput {
+				width: 50px;
 			}
 		</style>
 	</head>
@@ -56,19 +47,27 @@
 			<button id="stopBtn" disabled style="margin-right: 10px">制动</button>
 			<button id="resizeBtn" disabled style="margin-right: 10px">缩小图片</button>
 			<button id="resetBtn" disabled style="margin-right: 10px">重置遮罩</button>
-			<select id="imageQualitySelect" disabled style="margin-right: 10px">
-				<option value="1">低质量</option>
-				<option value="2">中质量</option>
-				<option value="3">高质量</option>
-			</select>
-			<input type="checkbox" disabled id="isShowEnergyMapInput" />
+			<label for="imageRatioInput">质量</label>
+			<input
+				type="number"
+				id="imageRatioInput"
+				value="0.2"
+				disabled
+				style="margin-right: 10px"
+			/>
 			<label for="isShowEnergyMapInput">能量图</label>
+			<input
+				type="checkbox"
+				disabled
+				id="isShowEnergyMapInput"
+				style="margin-right: 10px"
+			/>
+			<button id="downloadBtn">下载</button>
 		</div>
 		<div class="showBox">
 			<canvas width="0" height="0" id="resizeCanvas"></canvas>
 			<canvas width="0" height="0" id="energyCanvas"></canvas>
 			<div style="position: relative">
-				<img id="rawDataImg" />
 				<canvas width="0" height="0" id="rawDataCanvas"></canvas>
 				<canvas width="0" height="0" id="maskCanvas"></canvas>
 			</div>
@@ -76,6 +75,7 @@
 				<h2>请选择一张图片</h2>
 			</div>
 		</div>
+		<a id="useToDownloadA" download></a>
 	</body>
-	<script src="./index.js"></script>
+	<script src="index.js"></script>
 </html>
