@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Content Aware Image Resizing</title>
+		<style>
+			#resizeCanvas {
+				display: block;
+				margin-bottom: 10px;
+			}
+			#energyCanvas {
+				display: block;
+				margin-bottom: 10px;
+			}
+			#rawDataCanvas {
+				position: absolute;
+				left: 0;
+				top: 0;
+			}
+			#maskCanvas {
+				position: absolute;
+				left: 0;
+				top: 0;
+			}
+			#rawDataImg {
+				height: 0px;
+				visibility: hidden;
+			}
+			.resizeForm {
+				margin-bottom: 10px;
+			}
+			.showBox {
+				width: fit-content;
+				box-shadow: 0 0 3px 1px #eee;
+				padding: 5px;
+			}
+			#resizeWidthInput {
+				width: 30px;
+			}
+			#resizeHeightInput {
+				width: 30px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="resizeForm">
+			<input id="imageSelector" type="file" />
+			<div style="margin: 5px 0">
+				<label for="wPercentInput">宽度</label>
+				<input id="wPercentInput" disabled value="80" type="number" />
+				<label for="wPercentInput" style="margin-right: 15px">%</label>
+				<label for="hPercentInput">高度</label>
+				<input id="hPercentInput" disabled value="80" type="number" />
+				<label for="hPercentInput">%</label>
+			</div>
+			<button id="stopBtn" disabled style="margin-right: 10px">制动</button>
+			<button id="resizeBtn" disabled style="margin-right: 10px">缩小图片</button>
+			<button id="resetBtn" disabled style="margin-right: 10px">重置遮罩</button>
+			<select id="imageQualitySelect" disabled style="margin-right: 10px">
+				<option value="1">低质量</option>
+				<option value="2">中质量</option>
+				<option value="3">高质量</option>
+			</select>
+			<input type="checkbox" disabled id="isShowEnergyMapInput" />
+			<label for="isShowEnergyMapInput">能量图</label>
+		</div>
+		<div class="showBox">
+			<canvas width="0" height="0" id="resizeCanvas"></canvas>
+			<canvas width="0" height="0" id="energyCanvas"></canvas>
+			<div style="position: relative">
+				<img id="rawDataImg" />
+				<canvas width="0" height="0" id="rawDataCanvas"></canvas>
+				<canvas width="0" height="0" id="maskCanvas"></canvas>
+			</div>
+			<div id="noContentDiv">
+				<h2>请选择一张图片</h2>
+			</div>
+		</div>
+	</body>
+	<script src="./index.js"></script>
+</html>
