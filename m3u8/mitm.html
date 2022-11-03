@@ -1,0 +1,140 @@
+<!-- 
+	mitm.html is the lite "man in the middle"
+
+    中间人页面的作用:
+        1. 注册 serviceWorker
+        2. 拦截 web 页面的消息, 并进行预处理, 然后传给 serviceWorker
+        3. 保活 serviceWorker
+        4. 临时保存 serviceWorker 注册前的消息
+-->
+
+<script>
+	//#####################
+	//## 监听 serviceWorker 注册完成前 web 页面发送的消息,
+    //## 并临时保存在队列, 等待之后进行处理
+	//#####################
+	const tmpMsgQueue = [];
+	window.onmessage = evt => tmpMsgQueue.push(evt);
+
+	//#####################
+	//## 保活 serviceWorker
+	//#####################
+	const keepAlive = () => {
+		keepAlive = () => {};
+		const ping = location.href.substr(0, location.href.lastIndexOf('/')) + '/ping';
+		const interval = setInterval(() => {
+			if (serviceWorker) {
+				serviceWorker.postMessage('ping');
+			} else {
+				fetch(ping).then(res => res.text(!res.ok && clearInterval(interval)));
+			}
+		}, 10000);
+	};
+
+	//#####################
+	//## 注册 serviceWorker
+	//#####################
+	let scope = ''; // 当前 serviceWorker 所在域, 作为其唯一标识符
+	let sw = null;
+
+	const registerWorker = () => {
+		// 获取 ./ 域下已经注册过的 serviceWorker
+		return (
+			navigator.serviceWorker
+				.getRegistration('./')
+				// 如果已经存在注册过的 serviceWorker, 则复用, 否则产生新的一个
+				.then(swReg => swReg || navigator.serviceWorker.register('sw.js', { scope: './' }))
+				.then(swReg => {
+					// 保存 serviceWorker 所在域
+					scope = swReg.scope;
+
+					// 如果注册已就绪, 则保存好 serviceWorker 实例并返回
+					if (swReg.active) return (sw = swReg.active);
+
+					// 如果正在注册中, 则等待其注册完成
+					const swRegTmp = swReg.installing || swReg.waiting;
+					return new Promise(resolve => {
+						const onStatechange = () => {
+                            if (swRegTmp.state === 'activated') {
+                                swRegTmp.removeEventListener('statechange', onStatechange)
+                                resolve(sw = swReg.active)
+                            }
+                        }
+                        swRegTmp.addEventListener('statechange', onStatechange)
+					});
+				})
+		);
+	};
+
+
+	//#####################
+	//## 监听 web 页面发送的消息, 并进行处理, 然后发送给 serviceWorker
+	//#####################
+	function onMessage(event) {
+		let {
+			data, // 数据
+			ports, // channel
+			origin, // 消息作用域
+		} = event;
+
+		// console.log('mitm.onMessage', event);
+
+		// 检测消息通道, 保证所有下载之间不会相互干扰
+		if (!ports || !ports.length) throw new TypeError("[StreamSaver] You didn't send a messageChannel");
+
+		// 检测接受的数据实体
+		if (typeof data !== 'object') throw new TypeError("[StreamSaver] You didn't send a object");
+
+        data.origin = origin // 用于避免和其他下载发送冲突
+        data.referrer = data.referrer || document.referrer || origin // 用于重定向
+        data.streamSaverVersion = new URLSearchParams(location.search).get('version')
+
+		// 检查 readableStream
+		if (data.readableStream) {
+			console.warn('[StreamSaver] You should send the readableStream in the messageChannel, not through mitm');
+		}
+
+		// 检查 pathname
+		if (!data.pathname) {
+			console.warn('[StreamSaver] Please send `data.pathname` (eg: /pictures/summer.jpg)');
+			data.pathname = Math.random().toString().slice(-6) + '/' + data.filename;
+		}
+
+        // 检查 headers
+		if (!data.headers) console.warn("[StreamSaver] Pass `data.headers` that you would like to pass along to the service worker\nit should be a 2D array or a key/val object that fetch's Headers api accepts");
+		// test if it's correct should throw a typeError if not
+        else new Headers(data.headers);
+
+		// 删除所有前导斜杠
+		data.pathname = data.pathname.replace(/^\/+/g, '');
+        // 去除协议
+		let org = origin.replace(/(^\w+:|^)\/\//, '');
+		// 设置绝对路径, 以用于下载
+		data.url = new URL(`${scope + org}/${data.pathname}`).toString();
+
+		// 检查路径是否合法
+		if (!data.url.startsWith(`${scope + org}/`)) throw new TypeError('[StreamSaver] bad `data.pathname`');
+
+		const transferable = data.readableStream
+			? [ports[0], data.readableStream]
+			: [ports[0]];
+
+		if (!(data.readableStream || data.transferringReadable)) keepAlive();
+		
+		// 将从 web 主进程接收到的数据传输给 serviceWorker
+		return sw.postMessage(data, transferable);
+	}
+
+
+	// 消息回调, 告知主进程, 本页面已准备就绪
+	if (window.opener) window.opener.postMessage('StreamSaver::loadedPopup', '*');
+
+
+	// 注册完成, 并进行消息处理
+	if (navigator.serviceWorker)
+		registerWorker().then(() => {
+			window.onmessage = onMessage;
+			tmpMsgQueue.forEach(window.onmessage); // 处理之前临时存储的消息
+		});
+	else keepAlive();
+</script>
